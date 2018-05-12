@@ -20,20 +20,14 @@ namespace DNIC.Erechtheion
 {
 	public class Startup
 	{
-		public IConfigurationRoot Configuration { get; }
+		public IConfiguration Configuration { get; private set; }
 		public IHostingEnvironment Environment { get; }
 
-		public Startup(IHostingEnvironment env)
+		public Startup(IHostingEnvironment env, IConfiguration configuration)
 		{
 			Environment = env;
 
-			var configurationFile = env.IsDevelopment() ? $"appsettings.{env.EnvironmentName}.json" : $"appsettings.json";
-			IConfigurationBuilder builder = new ConfigurationBuilder()
-				.SetBasePath(env.ContentRootPath)
-				.AddJsonFile(configurationFile, optional: true, reloadOnChange: true)
-				.AddEnvironmentVariables();
-
-			Configuration = builder.Build();
+			Configuration = configuration;
 
 			// 配置 Serilog
 			Log.Logger = new LoggerConfiguration()
@@ -63,7 +57,7 @@ namespace DNIC.Erechtheion
 				config.UseDapperQueries();
 			});
 
-			if ((erechtheionBuilder.Configuratoin.AuthenticationMode & AuthenticationMode.Self) == AuthenticationMode.Self)
+			if ((erechtheionBuilder.Configuration.AuthenticationMode & AuthenticationMode.Self) == AuthenticationMode.Self)
 			{
 				services.AddIdentity<ErechtheionUser, IdentityRole>(config =>
 				{
@@ -77,11 +71,11 @@ namespace DNIC.Erechtheion
 					};
 					config.SignIn.RequireConfirmedEmail = false;
 					config.SignIn.RequireConfirmedPhoneNumber = false;
-				}).AddDapperStores(new SqlServerProvider(erechtheionBuilder.Configuratoin.ConnectionString)).AddDefaultTokenProviders();
+				}).AddDapperStores(new SqlServerProvider(erechtheionBuilder.Configuration.ConnectionString)).AddDefaultTokenProviders();
 			}
 
 			// 如果没有配置全局登录系统, 则使用默认注册和登录
-			if ((erechtheionBuilder.Configuratoin.AuthenticationMode & AuthenticationMode.External) == AuthenticationMode.External)
+			if ((erechtheionBuilder.Configuration.AuthenticationMode & AuthenticationMode.External) == AuthenticationMode.External)
 			{
 				services.AddAuthentication("Cookies")
 				.AddCookie("Cookies")
@@ -89,8 +83,8 @@ namespace DNIC.Erechtheion
 				{
 					options.SignInScheme = IdentityConstants.ExternalScheme;
 
-					options.Authority = erechtheionBuilder.Configuratoin.Authority;
-					options.RequireHttpsMetadata = erechtheionBuilder.Configuratoin.RequireHttpsMetadata;
+					options.Authority = erechtheionBuilder.Configuration.Authority;
+					options.RequireHttpsMetadata = erechtheionBuilder.Configuration.RequireHttpsMetadata;
 
 					options.ClientId = "DNIC.Erechtheion";
 					options.ClientSecret = "secret";

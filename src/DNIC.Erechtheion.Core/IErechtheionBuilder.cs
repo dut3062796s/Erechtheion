@@ -8,9 +8,9 @@ namespace DNIC.Erechtheion.Core
 {
 	public interface IErechtheionBuilder
 	{
-		IErechtheionConfiguration Configuratoin { get; }
+		IErechtheionConfiguration Configuration { get; }
 		IServiceCollection Services { get; }
 		void UseDbProviderFactory(DbProviderFactory dbProviderFactory);
-		void UseConfiguration(IConfigurationRoot configuration);
+		void UseConfiguration(IConfiguration configuration);
 	}
 }
